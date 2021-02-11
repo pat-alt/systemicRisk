@@ -1,5 +1,5 @@
-"0","stargazer(output, header = F)
-"
+"0","library(stargazer)"
+"0","stargazer(output, header = F, dep.var.labels.include = T)"
 "2","length of NULL cannot be changed"
 "2","length of NULL cannot be changed"
 "2","length of NULL cannot be changed"

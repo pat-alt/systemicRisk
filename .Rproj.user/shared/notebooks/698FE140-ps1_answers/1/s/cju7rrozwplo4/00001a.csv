@@ -14,15 +14,8 @@
 "0","    t0 <- Sys.time()"
 "0","    message(sprintf(""Fitting model for: %s"", dep_vars[i]))"
 "0","    mod <- felm(f, data = mod_data)"
-"0","    message(sprintf(""Convered after %0.2f seconds."", as.numeric(Sys.time()-t0)))"
+"0","    message(sprintf(""Converged after %0.2f seconds."", as.numeric(Sys.time()-t0)))"
 "0","    return(mod)"
 "0","  }"
 "0",")"
-"2","Fitting model for: lncredit
-"
-"2","Convered after 21.74 seconds.
-"
-"2","Fitting model for: intrate
-"
-"2","Convered after 25.21 seconds.
-"
+"0","names(output) <- dep_vars"
