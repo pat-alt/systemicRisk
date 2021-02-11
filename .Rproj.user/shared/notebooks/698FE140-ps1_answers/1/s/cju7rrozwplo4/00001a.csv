@@ -1,0 +1,28 @@
+"0","library(lfe)"
+"0","dep_vars <- c(""lncredit"", ""intrate"")"
+"0","index_vars <- c(""firmid"", ""bankid"") # for entity fixed-effects"
+"0","indep_vars <- colnames(dt)[!colnames(dt) %in% c(dep_vars, ""date_q"")]"
+"0","output <- lapply("
+"0","  1:length(dep_vars),"
+"0","  function(i) {"
+"0","    col_names <- c(dep_vars[i], indep_vars)"
+"0","    mod_data <- dt[,.SD,.SDcols=col_names]"
+"0","    setnames(mod_data, dep_vars[i], ""y"")"
+"0","    col_names <- colnames(mod_data)"
+"0","    f <- paste(""y ~"", paste(col_names[!col_names %in% c(""y"", index_vars)], collapse = "" + ""))"
+"0","    f <- as.formula(paste(f, paste(index_vars, collapse = "" + ""),sep = "" | ""))"
+"0","    t0 <- Sys.time()"
+"0","    message(sprintf(""Fitting model for: %s"", dep_vars[i]))"
+"0","    mod <- felm(f, data = mod_data)"
+"0","    message(sprintf(""Convered after %0.2f seconds."", as.numeric(Sys.time()-t0)))"
+"0","    return(mod)"
+"0","  }"
+"0",")"
+"2","Fitting model for: lncredit
+"
+"2","Convered after 21.74 seconds.
+"
+"2","Fitting model for: intrate
+"
+"2","Convered after 25.21 seconds.
+"
