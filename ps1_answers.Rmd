@@ -1,6 +1,6 @@
 ---
 title: "Problem Set 1"
-author: "Patrick Altmeyer"
+author: "Patrick Altmeyer, Helena Patterson, Daniel Mueck and Gabriela Lavagna"
 date: "`r format(Sys.Date(), '%d %B, %Y')`"
 output: 
   bookdown::pdf_document2:
@@ -23,11 +23,15 @@ library(data.table)
 dt <- fread("data/ncr.txt")
 ```
 
+# Question 1
+
 # Average pass-through
 
 ## Bank and firm fixed effects
 
-Below I estimate the fixed effects regression:
+As a first step, we look to estimate an average pass-through of Monetary Policy shocks. We run two regressions with our dependent variables as interest rates and bank's credit volume, controlling for macroeconomic factors (GDP and inflation) and other specific bank-related factors. As we are only examining the average monetary policy pass-through at this stage, we do not include the time-related fixed effects. Instead, we include only a bank and firm fixed effect, which absorbs the time-varying heterogeneity at the firm and bank level. 
+
+This first regression is shown in Table 1 below. Column 1 represents the dependent variable of the bank's credit volume and column 2 shows the regression results when considering the interest rate charged as the dependent variable. As we can see, when considering in terms of average pass-through, the monetary policy shock variable is statistically significant. Indeed, the results indicate that a rise in the base interest rate is associated with both a fall in credit volume and a rise in the interest rates charged by lenders, as would be expected. Banks pass through the higher interest rates they pay on reserves at the Central Bank to their customers, along with a fall in credti volumes as lending and/or borrowing declines. 
 
 ```{r, echo=TRUE}
 library(lfe)
@@ -52,15 +56,53 @@ output <- lapply(
 )
 names(output) <- dep_vars
 ```
-
-The table below 
  
 ```{r tab1, results='asis'}
 library(stargazer)
 stargazer(output, header = F, dep.var.labels.include = T)
 ```
+\FloatBarrier
+
+In order to verify the robustness of our estimates, we next look to run these regressions with fewer controls. Specifically, we start by examining the regression just by taking into account the macroeconomic factors (GDP and inflation). We note that the sign of the coefficient on the monetary policy shock variable is still the same, which points indicatively to more robust estimates. We acknowledge however that these regressions are only able to give us an indication of whether or not a relationship is present. They are not able to tell us the direction of the relationship due to the supply and demand dynamics at play - that is, changes in the interest rate might impact both credit demand (from the firms) and supply (from the banks). 
+
+```{r}
+dep_vars <- c("lncredit", "intrate")
+index_vars <- c("firmid", "bankid") # for entity fixed-effects
+indep_vars <- colnames(dt)[!colnames(dt) %in% c(dep_vars, "date_q", "bdepo_l","bcet1_l","bsize_l","blar_l")]
+output <- lapply(
+  1:length(dep_vars),
+  function(i) {
+    col_names <- c(dep_vars[i], indep_vars)
+    mod_data <- dt[,.SD,.SDcols=col_names]
+    setnames(mod_data, dep_vars[i], "y")
+    col_names <- colnames(mod_data)
+    f <- paste("y ~", paste(col_names[!col_names %in% c("y", index_vars)], collapse = " + "))
+    f <- as.formula(paste(f, paste(index_vars, collapse = " + "),sep = " | "))
+    t0 <- Sys.time()
+    message(sprintf("Fitting model for: %s", dep_vars[i]))
+    mod <- felm(f, data = mod_data)
+    message(sprintf("Converged after %0.2f seconds.", as.numeric(Sys.time()-t0)))
+    return(mod)
+  }
+)
+names(output) <- dep_vars
+```
+
+```{r tab1, results='asis'}
+library(stargazer)
+stargazer(output, header = F, dep.var.labels.include = T)
+```
+\FloatBarrier
+
+# Question 2
 
 ## Firm and time fixed effects
+
+As a next step, we look to impose a firm time fixed effect in order to examine our results in the context of allowing for bank-level heterogeneity. This allows us to exploit changes in credit standards for the same firm triggered by monetary policy shocks across banks with different balance-sheet exposures. We have included these fixed effects as shown in Table 2 below which controls for all constant and time-varying firm-level shocks. In particular, we are interested in the interaction terms. Notably, the interaction term for liquid assets is significant in both regressions and could imply that banks with a higher share of liquid assets better withstand monetary. For regression (1), where oustanding credit was the dependent variable, we observe a positive coefficient on the bank liquid asset interaction. This implies that a monetary contraction is associated with an increase in bank lending credit and provides some evidence to Kashyap and Stein (2000, AER)....
+
+Next we observe the interaction term with bank capital...
+
+Finally...
 
 ```{r}
 dep_vars <- c("lncredit", "intrate")
@@ -92,8 +134,48 @@ names(output) <- dep_vars
 library(stargazer)
 stargazer(output, header = F, dep.var.labels.include = T)
 ```
+\FloatBarrier
+
+We remove some controls in order to determine the robustnes...
+
+```{r}
+
+dep_vars <- c("lncredit", "intrate")
+index_vars <- c("firmid") # for entity fixed-effects
+interaction_terms_bank_level <- c("bdepo_l", "bcet1_l", "bsize_l", "blar_l")
+interaction_term_names = sprintf("mp_x_%s", interaction_terms_bank_level)
+dt[,(interaction_term_names):=lapply(.SD, function(i) i*mpshock_l),.SDcols=interaction_terms_bank_level]
+indep_vars <- colnames(dt)[!colnames(dt) %in% c(dep_vars,"bankid","date_q", "bdepo_l","bcet1_l","blar_l","bsize_l")]
+output <- lapply(
+  1:length(dep_vars),
+  function(i) {
+    col_names <- c(dep_vars[i], indep_vars)
+    mod_data <- dt[,.SD,.SDcols=col_names]
+    setnames(mod_data, dep_vars[i], "y")
+    col_names <- colnames(mod_data)
+    f <- paste("y ~", paste(col_names[!col_names %in% c("y", index_vars)], collapse = " + "))
+    f <- as.formula(paste(f, paste(index_vars, collapse = " + "),sep = " | "))
+    t0 <- Sys.time()
+    message(sprintf("Fitting model for: %s", dep_vars[i]))
+    mod <- felm(f, data = mod_data)
+    message(sprintf("Convered after %0.2f seconds.", as.numeric(Sys.time()-t0)))
+    return(mod)
+  }
+)
+names(output) <- dep_vars
+
+```
+
+```{r tab2, results='asis'}
+library(stargazer)
+stargazer(output, header = F, dep.var.labels.include = T)
+```
+\FloatBarrier
+
 
 ## Controlling for scales
+
+Placeholder for Text....
 
 ```{r standardized}
 dt_stand <- copy(dt)
