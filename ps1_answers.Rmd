@@ -33,7 +33,7 @@ dt <- fread("data/ncr.txt")
 
 As a first step, we look to estimate an average pass-through of Monetary Policy shocks. We run two regressions with our dependent variables as interest rates and bank's credit volume, controlling for macroeconomic factors (GDP and inflation) and other specific bank-related factors. As we are only examining the average monetary policy pass-through at this stage, we do not include the time-related fixed effects. Instead, we include only a bank and firm fixed effect, which absorbs the time-varying heterogeneity at the firm and bank level. 
 
-This first regression is shown in Table 1 below. Standard error are clustered at the multi-way group level. We supply the optional argument `cmethod = 'cgm2'` which implements multi-way clustering as in Stata and Julia. In particular, clustering is implemented as follows
+This first regression is shown in Table 1 below. Standard errors are clustered at the multi-way group level. We supply the optional argument `cmethod = 'cgm2'` which implements multi-way clustering as in Stata and Julia. In particular, clustering is implemented as follows:
 
 \begin{equation} 
 \begin{aligned}
@@ -112,11 +112,12 @@ stargazer(output, header = F, column.labels = c("Volume", "Interest rate"))
 
 ## Firm and time fixed effects
 
-As a next step, we look to impose a firm time fixed effect in order to examine our results in the context of allowing for bank-level heterogeneity. This allows us to exploit changes in credit standards for the same firm triggered by monetary policy shocks across banks with different balance-sheet exposures. We have included these fixed effects as shown in Table 2 below which controls for all constant and time-varying firm-level shocks. In particular, we are interested in the interaction terms. Notably, the interaction term for liquid assets is significant in both regressions and could imply that banks with a higher share of liquid assets better withstand monetary. For regression (1), where oustanding credit was the dependent variable, we observe a positive coefficient on the bank liquid asset interaction. This implies that a monetary contraction is associated with an increase in bank lending credit and provides some evidence to Kashyap and Stein (2000, AER)....
+As a next step, we look to impose a firm time fixed effect in order to examine our results in the context of allowing for bank-level heterogeneity. This allows us to exploit changes in credit standards for the same firm triggered by monetary policy shocks across banks with different balance-sheet exposures. We have included these fixed effects as shown in Table 2 below which controls for all constant and time-varying firm-level shocks. In particular, we are interested in the interaction terms. Notably, the interaction term for liquid assets is significant in both regressions and could imply that banks with a higher share of liquid assets better withstand monetary. For regression (1), where oustanding credit was the dependent variable, we observe a positive coefficient on the bank liquid asset interaction. This implies that a monetary contraction is associated with an increase in bank lending credit and provides some evidence to Kashyap and Stein (2000, AER).
 
-Next we observe the interaction term with bank capital...
+Next, we observe the interaction term with bank capital. We can see that the interaction term for common equity Tier 1 capital is statistically significant in both cases. The negative coefficient in regression (1) implies that banks with lower capital reduce more their lending when a monetary contraction takes place, as many studies suggest (Borio and Zhu, 2012 JFS; Jiménez et al., 2012 AER, among others).
 
-Finally...
+Finally, the coefficient associated with the volume of deposits is statistically significant in both cases. Moreover, in regression (1) the negative coefficient implies that banks with a higher volume of deposits decrease even further their lending when a monetary contraction takes place relative to banks with lower volume of deposits. This could be associated with banks exploiting their market power and increasing their deposit spread when the policy rate increases.
+As in the previous exercise, we test the robustness of our estimates by running these regressions with fewer controls. We include a simpler version of the models, removing the macro variables (GDP and inflation) as controls. As we can see from the table below, in all cases there is not a significant variation in the estimates, suggesting that our model is robust.
 
 ```{r}
 dep_vars <- c("lncredit", "intrate")
@@ -149,7 +150,6 @@ library(stargazer)
 stargazer(output, header = F, column.labels = c("Volume", "Interest rate"))
 ```
 
-We remove some controls in order to determine the robustnes...
 
 ```{r}
 dep_vars <- c("lncredit", "intrate")
@@ -157,7 +157,7 @@ index_vars <- c("firmid") # for entity fixed-effects
 interaction_terms_bank_level <- c("bdepo_l", "bcet1_l", "bsize_l", "blar_l")
 interaction_term_names = sprintf("mp_x_%s", interaction_terms_bank_level)
 dt[,(interaction_term_names):=lapply(.SD, function(i) i*mpshock_l),.SDcols=interaction_terms_bank_level]
-indep_vars <- colnames(dt)[!colnames(dt) %in% c(dep_vars,"bankid","date_q", "bdepo_l","bcet1_l","blar_l","bsize_l")]
+indep_vars <- colnames(dt)[!colnames(dt) %in% c(dep_vars,"bankid","date_q", "infl_l","gdp_l")]
 output <- lapply(
   1:length(dep_vars),
   function(i) {
@@ -188,7 +188,7 @@ stargazer(output, header = F, column.labels = c("Volume", "Interest rate"))
 
 ## Controlling for scales
 
-Placeholder for Text....
+As a final step, we want to discuss the relative strength of the different channels. However, as the different channels move in different scales, we cannot compare the previous estimates directly. To solve this issue, we standardise our variables and study the size of the channels based on comparable distribution moments (one standard deviation). As we can see from the table below, the evidence suggests that the strongest channel in this case is the one related to capital levels.
 
 ```{r standardized}
 dt_stand <- copy(dt)
@@ -218,5 +218,4 @@ names(output) <- dep_vars
 library(stargazer)
 stargazer(output, header = F, column.labels = c("Volume", "Interest rate"))
 ```
-
-# Discussion
+\FloatBarrier
