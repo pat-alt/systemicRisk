@@ -1,0 +1,123 @@
+---
+title: "Problem Set 2"
+author: "Patrick Altmeyer, Helena Patterson, Daniel Mueck and Gabriela Lavagna"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    toc: false
+    includes:
+      in_header: preamble.tex
+    number_sections: false
+  bookdown::html_document2:
+    code_folding: show
+    number_sections: false
+    toc: true
+    toc_float: true
+bibliography: bib.bib
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning = FALSE)
+library(data.table)
+```
+
+```{r, eval=FALSE}
+dt <- data.table(haven::read_dta("data/ps2.dta"))
+fwrite(dt, "data/ps2.csv")
+```
+
+```{r}
+dt <- fread("data/ps2.csv")
+```
+
+
+# 1.
+
+Investigate bank balance-sheet data and show whether IRB- banks use internal models to reduce capital holdings. You should use both statistical and graphical tools.
+
+<hr>
+
+To make things clearer we reformat the date variable `date_q`:
+
+```{r}
+dt[,date_q:=zoo::as.yearqtr(2006 + (date_q-min(date_q))/4)]
+```
+
+The table below shows a summary of the distribution of bank's total assets. Figure \@ref(fig:hist) provides a visual summary. The left panel shows the log-distribution, while the right panel shows levels in millions of assets. Light-blue bins indicate IRB-labelled banks.
+
+```{r, results='asis'}
+library(xtable)
+xtable(data.frame(c(summary(dt[date_q=="2007 Q1"]$bsize_))) , label = "Distribution of banks' total assets")
+```
+
+```{r hist, fig.width=10, fig.height=4, fig.cap="Histograms for banks' total assets. The left panel shows the log-distribution, while the right panel shows levels in millions of assets. Light-blue bins indicate IRB-labelled banks."}
+library(ggplot2)
+theme_set(theme_bw())
+dt[,total_assets_mn:=exp(bsize_)/1e6]
+# Assign indicator:
+dt_sub <- unique(dt[date_q=="2007 Q1", .(bankid, bsize_)])[,type:=ifelse(bsize_>quantile(bsize_, 0.75),"IRB", "SA")]
+dt_sub[,bsize_:=NULL]
+setkey(dt, bankid)
+setkey(dt_sub, bankid)
+dt <- dt_sub[dt]
+# Prepare plot:
+dt_plot <- melt(dt[date_q=="2007 Q1"], id.vars = c("firmid", "bankid", "date_q", "type"), measure.vars = c("bsize_", "total_assets_mn"))
+levels(dt_plot$variable) <- c("Logs", "Levels (millions)")
+p <- ggplot(data=dt_plot, aes(x=value, fill=type)) +
+  geom_histogram(colour="blue") +
+  scale_fill_manual(
+    name="Risk-weighting:",
+    values=c("lightblue", "white")
+  ) +
+  labs(
+    x = "Total assets",
+    y = "Count"
+  ) +
+  facet_wrap(
+    ~ variable,
+    scales = "free"
+  )
+p
+```
+
+The Basel III leverage ratio can be computed form the available data as $\ell_{\text{Basel}}= \frac{\ell_{\text{Tier-1}}A_{\text{risk-weighted}}}{A}$ where $\ell_{\text{Tier-1}}$ denotes the Tier-1 Capital Ratio, $A_{\text{risk-weighted}}$ denotes risk-weighted capital and $A$ denotes banks' total assets. Since assets (`bcet1_`,`bsize_`) are provided in log-terms we need to make a small adjustment for that and take exponentials (although not accounting for only leads to a relatively error):
+
+```{r}
+dt[,basel_lev:=(bcet1_*exp(bsizerw_))/exp(bsize_)] # compute leverage ratio
+```
+
+Then the following code generates Figure \@ref(fig:lev).
+
+```{r lev, fig.cap="Evolution of leverage ratio over time."}
+dt_plot <- unique(melt(dt, id.vars = c("bankid", "date_q", "type"), measure.vars = c("bcet1_", "basel_lev")))
+dt_plot <- dt_plot[,.(value=mean(value)),by=.(date_q, type, variable)][order(date_q, type, variable)] # averages
+levels(dt_plot$variable) <- c("Tier-1", "Basel III")
+p <- ggplot(data=dt_plot, aes(x=date_q, y=value, colour=type, linetype=variable)) +
+  geom_line() +
+  scale_color_discrete(name="Risk-weighting:") +
+  scale_linetype_discrete(name="Ratio:") +
+  labs(
+    x="Time",
+    y="Ratio"
+  ) 
+p
+```
+
+```{r, eval=F}
+dt_plot <- unique(melt(dt, id.vars = c("bankid", "date_q", "type"), measure.vars = c("bcet1_", "basel_lev")))
+levels(dt_plot$variable) <- c("Tier-1", "Basel III")
+p <- ggplot(data=dt_plot, aes(x=date_q, y=value, colour=type, alpha=factor(bankid))) +
+  geom_line() +
+  scale_color_discrete(name="Risk-weighting:") +
+  scale_linetype_discrete(name="Ratio:") +
+  labs(
+    x="Time",
+    y="Ratio"
+  ) +
+  facet_grid(
+    rows = vars(variable)
+  )
+p
+```
+
