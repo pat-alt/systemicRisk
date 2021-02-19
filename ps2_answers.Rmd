@@ -48,10 +48,13 @@ The table below shows a summary of the distribution of bank's total assets. Figu
 
 ```{r, results='asis'}
 library(xtable)
-xtable(data.frame(c(summary(dt[date_q=="2007 Q1"]$bsize_))) , label = "Distribution of banks' total assets")
+options(xtable.comment = FALSE)
+xtab = data.frame(c(summary(dt[date_q=="2007 Q1"]$bsize_)))
+colnames(xtab) = "Total assets (logs)"
+xtable(xtab, label = "Distribution of banks' total assets as of 2017 Q1.")
 ```
 
-```{r hist, fig.width=10, fig.height=4, fig.cap="Histograms for banks' total assets. The left panel shows the log-distribution, while the right panel shows levels in millions of assets. Light-blue bins indicate IRB-labelled banks."}
+```{r hist, fig.width=10, fig.height=4, fig.cap="Histograms for banks' total assets as of 2017 Q1. The left panel shows the log-distribution, while the right panel shows levels in millions of assets. Light-blue bins indicate IRB-labelled banks."}
 library(ggplot2)
 theme_set(theme_bw())
 dt[,total_assets_mn:=exp(bsize_)/1e6]
@@ -87,37 +90,52 @@ The Basel III leverage ratio can be computed form the available data as $\ell_{\
 dt[,basel_lev:=(bcet1_*exp(bsizerw_))/exp(bsize_)] # compute leverage ratio
 ```
 
-Then the following code generates Figure \@ref(fig:lev).
+Then the following code generates Figure \@ref(fig:lev). The top panel shows time series of the different leverage ratios diffentiated by bank type. The black vertical stalk indicates 2007 Q1. The bottom panel shows the difference in leverage ratios between IRB- and SA-labelled banks indexed to 2007 Q1. Upon visual inspection the difference between leverage ratio increased following the regulatory change in 2007 Q1.
 
-```{r lev, fig.cap="Evolution of leverage ratio over time."}
+```{r lev, fig.cap="Evolution of leverage ratio over time. The top panel shows time series of the different leverage ratios diffentiated by bank type. The black vertical stalk indicates 2007 Q1. The bottom panel shows the difference in leverage ratios between IRB- and SA-labelled banks indexed to 2007 Q1."}
 dt_plot <- unique(melt(dt, id.vars = c("bankid", "date_q", "type"), measure.vars = c("bcet1_", "basel_lev")))
 dt_plot <- dt_plot[,.(value=mean(value)),by=.(date_q, type, variable)][order(date_q, type, variable)] # averages
 levels(dt_plot$variable) <- c("Tier-1", "Basel III")
-p <- ggplot(data=dt_plot, aes(x=date_q, y=value, colour=type, linetype=variable)) +
+p1 <- ggplot(data=dt_plot, aes(x=date_q, y=value, colour=type, linetype=variable)) +
   geom_line() +
   scale_color_discrete(name="Risk-weighting:") +
   scale_linetype_discrete(name="Ratio:") +
   labs(
-    x="Time",
-    y="Ratio"
-  ) 
-p
-```
-
-```{r, eval=F}
-dt_plot <- unique(melt(dt, id.vars = c("bankid", "date_q", "type"), measure.vars = c("bcet1_", "basel_lev")))
-levels(dt_plot$variable) <- c("Tier-1", "Basel III")
-p <- ggplot(data=dt_plot, aes(x=date_q, y=value, colour=type, alpha=factor(bankid))) +
-  geom_line() +
-  scale_color_discrete(name="Risk-weighting:") +
-  scale_linetype_discrete(name="Ratio:") +
-  labs(
-    x="Time",
+    x="",
     y="Ratio"
   ) +
-  facet_grid(
-    rows = vars(variable)
-  )
-p
+  geom_vline(xintercept = zoo::as.yearqtr("2007 Q1")) +
+  theme(legend.position="top")
+
+dt_plot <- dt_plot[,.(value=value[type=="IRB"] - value[type=="SA"]), by=.(date_q, variable)]
+dt_plot <- dt_plot[,.(date_q=date_q,value=(value-value[date_q=="2007 Q1"])/value[date_q=="2007 Q1"]*100),by=variable]
+p2 <- ggplot(dt_plot, aes(x=date_q, y=value, linetype=variable)) +
+  geom_col(position = "dodge", fill="white", colour="black") +
+  labs(
+    x="Time",
+    y="Difference"
+  ) +
+  scale_linetype_discrete(name="Ratio:") + 
+  theme(legend.position="none")
+
+library(gridExtra)
+grid.arrange(p1,p2, heights=c(2,1), ncol=1)
 ```
+
+# 2.
+
+Below we first run a simple pooled difference-in-difference (DiD) model.
+
+```{r}
+dt[,post:=ifelse(date_q<"2007 Q1",0,1)] # define structural break indicator
+dt[,D:=ifelse(type=="IRB",1,0)] # define treatment dummy
+mod_pooled <- lm(lncredit ~ D + post + post * D, data = dt)
+```
+
+```{r}
+index_vars <- c("firmid", "bankid") # for entity fixed-effects
+```
+
+
+
 
