@@ -41,7 +41,7 @@ Investigate bank balance-sheet data and show whether IRB- banks use internal mod
 To make things clearer we reformat the date variable `date_q`:
 
 ```{r}
-dt[,date_q:=zoo::as.yearqtr(2006 + (date_q-min(date_q))/4)]
+dt[,date_q:=zoo::as.yearqtr(2000 + (date_q-min(date_q))/4)]
 ```
 
 The table below shows a summary of the distribution of bank's total assets. Figure \@ref(fig:hist) provides a visual summary. The left panel shows the log-distribution, while the right panel shows levels in millions of assets. Light-blue bins indicate IRB-labelled banks.
