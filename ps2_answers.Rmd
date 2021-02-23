@@ -129,11 +129,12 @@ Below we first run a simple pooled difference-in-difference (DiD) model.
 ```{r}
 dt[,post:=ifelse(date_q<"2007 Q1",0,1)] # define structural break indicator
 dt[,D:=ifelse(type=="IRB",1,0)] # define treatment dummy
-mod_pooled <- lm(lncredit ~ D + post + post * D, data = dt)
+mod_pooled <- lm(lncredit ~ post * D, data = dt)
 ```
 
 ```{r}
-index_vars <- c("firmid", "bankid") # for entity fixed-effects
+library(lfe)
+mod_fe <- felm(lncredit ~ D * post | date_q, data=dt)
 ```
 
 
