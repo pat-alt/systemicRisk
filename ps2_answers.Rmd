@@ -54,7 +54,7 @@ library(xtable)
 options(xtable.comment = FALSE)
 xtab = data.frame(c(summary(dt[date_q=="2007 Q1"]$bsize_)))
 colnames(xtab) = "Total assets (logs)"
-xtab <- xtable(xtab, label = "Distribution of banks' total assets as of 2017 Q1.")
+xtab <- xtable(xtab)
 print(xtab, type="html")
 ```
 
@@ -222,7 +222,18 @@ stargazer(
 
 ## Parallel trend
 
-```{r}
+To provide some heuristic evidence for the parallel trend assumption we run the following regression:
+
+$$
+\begin{aligned}
+&& y_{it}&=\sum_{t\ne0} \beta_{t} t^TD_i + \alpha_{ij} + \varepsilon_i \\
+\end{aligned}
+$$
+where $t$ is just a vector of time periods, $D_i$ is the treatment dummy and $\alpha_{ij}$ are firm-bank fixed effects.
+
+Figure \@ref(fig:par-trend) plots the resulting vector of coefficients $\beta$ along with error bars. We find no divergence in trend of loan growth across small and large bank. Differences show up only upon implementation of the policy.
+
+```{r par-trend, fig.cap="Time-varying coefficient."}
 alpha <- .05
 mod <- summary(felm(lncredit ~ factor(date_q) * D | firmbank, data = dt))
 coef <- data.table(mod$coefficients)
