@@ -2,20 +2,22 @@
 title: "Monetary policy and inequality"
 author: "Patrick Altmeyer, Helena Patterson, Daniel Mueck and Gabriela Lavagna"
 date: "`r format(Sys.Date(), '%B, %Y')`"
-output: 
+output:
   beamer_presentation:
     includes:
       in_header: preamble.tex
     slide_level: 2
   bookdown::pdf_document2:
-    toc: false
+    toc: no
     includes:
       in_header: preamble.tex
+  slidy_presentation: default
 bibliography: bib.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/Users/helenapatterson/Documents/BGSE/Term 2/Systemic Risks")
 ```
 
 # Overview
@@ -30,17 +32,18 @@ knitr::opts_chunk$set(echo = FALSE)
     1. Skill-biased technological change
     2. Global trade
     3. Unionization
-    4. Lack of captial taxation [@piketty2013capital]
-    
+    4. Lack of capital taxation [@piketty2013capital]
+
 ## Relevant papers
 
 The doves:
 
-- @coibion2012innocent (main focus here)
+- @coibion2017innocent (main focus here)
     - Contractionary monetary policy increases inequality in labour earnings, total income, consumption and total expenditures.
     - Size of the contribution of monetary policy shocks to inequality is of a similar magnitude as their contribution to other macroeconomic variables.
 - @bunn2020has (BoE staff working paper):
-    - ...
+    - Expansionary monetary policy (between 2008-2014) have been found to have reduced inequality, relative to the counterfactual of no change in policy.
+    - Younger households (with less secure jobs, higher debts) experienced the largest welfare gains, whereas older households dependent on savings income are most likely to have been made worse off. 
 
 The hawks:
 
@@ -57,7 +60,7 @@ Expansionary monetary policy $\rightarrow$ rise in inequality
 2. Financial fragmentation channel: heterogeneity with respect to access to financial markets. Those more connected to financial markets may be the primary beneficiaries of expansionary monetary policy.
 3. Portfolio channel: if low-income households tend to hold relatively more currency than high-income households, then inflationary pressures erode their net wealth.
 
-@coibion2012innocent find evidence consistent with income composition channel: 
+@coibion2017innocent find evidence consistent with income composition channel: 
 
 - Financial income rises sharply while business income labour earnings fall. Income transfers are found to be an effective tool to soften the blow.
 
@@ -68,7 +71,7 @@ Contractionary monetary policy $\rightarrow$ rise in inequality:
 1. Savings redistribution channel: an unexpected rise in interest rates hurts borrowers. (This may lead to a rise in inequality if we assume that poorer households tend to be net borrowers of wealthier households.)
 2. Earnings heterogeneity channel: contractionary policy may cause a disproportionate increase in umemployment of low income groups.
 
-@coibion2012innocent provide evidence consistent with the *earnings heterogeneity channel*: heterogeneous wage responses to contractionary shocks. 
+@coibion2017innocent provide evidence consistent with the *earnings heterogeneity channel*: heterogeneous wage responses to contractionary shocks. 
 
 # Data
 
@@ -78,7 +81,7 @@ Contractionary monetary policy $\rightarrow$ rise in inequality:
     - monthly frequency (aggregated to quarterly), which is necessary to analyse the effect of (conventional) monetary policy shocks. 
     - provided by the Bureau of Labor Statistics (BLS)
     - CEX was and still is used for construction of CPI weights
-    
+
 ## Distributional measures
 
 Bother income and consumption inequality are measured through three different distributional measures:
@@ -88,7 +91,7 @@ b. cross-sectional standard deviations of log levels
 c. differences between individual percentiles of the cross-sectional distribution of log levels
 
 - a. is widely used but subject to the influence of outliers. b. and c. are less subject to outliers and more in line with the narrative of the paper (focusing on income percentiles), but 0s need to be eliminated
-- measures are unsurprsingly all highly correlated (though less so for the labor earnigns inequality measures since here the effect of eliminating zeros plays a larger role.)
+- measures are unsurprsingly all highly correlated (though less so for the labor earnings inequality measures since here the effect of eliminating zeros plays a larger role.)
 
 - income is further split into 1) labor earnings and 2) total income (labor earnings plus financial income, business income and transfers for each household)
 - focus on pre-tax measures, but show that results are robust for after-tax measures.
@@ -98,9 +101,10 @@ c. differences between individual percentiles of the cross-sectional distributio
 - sharp rise in income inequality during early 80s - attributable to contractionary Volcker rule?
 
 ![](www/coibion_ineq.png)
+
 ## Monetary policy shocks - short-term
 
-Romer and Romer (2004) model shocks as unexpected changes to the Fed Funds rate, conditional on prior information set revealed by Fed:
+@romer2004 model shocks as unexpected changes to the Fed Funds rate, conditional on prior information set revealed by Fed:
 
 ![](www/romer.png)
 
@@ -108,9 +112,9 @@ Romer and Romer (2004) model shocks as unexpected changes to the Fed Funds rate,
 
 ## Monetary policy shocks - reaction function
 
-- Romer and Romer is subject to endogeneity: preferences or objectives of the central bank and political constraints may play a role in these shocks.
+- @romer2004 is subject to endogeneity: preferences or objectives of the central bank and political constraints may play a role in these shocks.
 
-- Instead of short-term shocks, may instead model permanent changes to Taylor-type rule based optimal interest rate and inflation targets
+- Instead of short-term shocks, may instead model permanent changes to Taylor-type rule based optimal interest rate and inflation targets.
 
 # Empirical strategy
 
@@ -241,19 +245,51 @@ FEVDs reveal significant contribution of monetary policy shocks to variation in 
 - CEX underreports consumption relative to aggregate data and that this underreporting has become more severe over time. the potential underreporting of consumption in the CEX is less of a concern, since we will focus on cyclical fluctuations in consumption inequality
 - ordering of the VAR model seems somewhat arbitrary: imposes that inequality reacts contemporaneously to all other covariates
 
+# The Central Banker View - @bunn2020has (BoE staff working paper)
+
+## Methodology
+
+Measured using household utility function of the form:
+
+$$
+\begin{aligned}
+U = \phi(\alpha(y), \beta(w), \gamma(X))
+\end{aligned}
+$$
+
+![](www/boe_wellbeing.png)
+
+Approach to estimation assumes that subjective well-being, u, is linked to try household utility:
+
+$$
+\begin{aligned}
+u_{it} = \alpha_{i} + \delta_{t}\frac{y_{it}^{1-\theta}}{1-\theta}+\gamma_{t}\frac{w_{it}^{1-\theta}-1}{1-\theta} + \Sigma j\beta_{j}x_{jit}+\gamma_{t} + \epsilon_{it}
+\end{aligned}
+$$
+
+## Results
+
+- Welfare benefits have been positive, mostly through non-financial rather than conventional financial means.
+- Results contrast with the negative public perceptions of the impact of looser monetary policy. 
+- Authors' take-aways highlight the importance of Central Bank communication.
+
+![](www/boe_results.png)
+
+## Looking Forwards
+
+- Numerous channels through which monetary policy operates means difficulty in gauging effectiveness.
+- Arguably historically fiscal policy has played a deeper role in welfare [@piketty2013capital]
+- Nonetheless, covid-19 and the extraordinary measures undertaken by CBs means fiscal and monetary lines have become more blurred.
+
+![](www/ft.png)
+
 ## References
 
 ::: {#refs}
 :::
 
-# Annex
 
-## Monetary policy shocks
 
-![](www/shocks.png)
 
-## Reaction function
-
-![](www/reaction_fun.png)
 
 
